@@ -10,6 +10,42 @@ class PharmaciesEcran extends StatefulWidget {
 }
 
 class _PharmaciesEcranState extends State<PharmaciesEcran> {
+  void _ajouterPharmacie() async {
+    // Ajouter la logique pour l'ajout d'une nouvelle pharmacie
+    final nouvellePharmacie = Pharmacie(
+      nom: 'Nom de la pharmacie',
+      quartier: 'Nom du quartier',
+      latitude: 0.0, // Remplacer par les valeurs appropriées
+      longitude: 0.0, // Remplacer par les valeurs appropriées
+    );
+
+    try {
+      final pharmacieCree =
+          await pharmacieService.creerPharmacie(nouvellePharmacie);
+      // Ajouter la nouvelle pharmacie à la liste ou mettre à jour l'affichage
+      setState(() {
+        _pharmacies.add(pharmacieCree);
+      });
+    } catch (e) {
+      // Gérer l'erreur, afficher un message à l'utilisateur, etc.
+      print('Erreur lors de l\'ajout de la pharmacie: $e');
+    }
+  }
+
+  void _supprimerPharmacie(String id) async {
+    // Ajouter la logique pour la suppression d'une pharmacie
+    try {
+      await pharmacieService.supprimerPharmacie(id);
+      // Supprimer la pharmacie de la liste ou mettre à jour l'affichage
+      setState(() {
+        _pharmacies.removeWhere((pharmacie) => pharmacie.id == id);
+      });
+    } catch (e) {
+      // Gérer l'erreur, afficher un message à l'utilisateur, etc.
+      print('Erreur lors de la suppression de la pharmacie: $e');
+    }
+  }
+
   final PharmacieService pharmacieService = PharmacieService();
 
   Future<List<Pharmacie>> chargerPharmacies() async {
@@ -21,19 +57,19 @@ class _PharmaciesEcranState extends State<PharmaciesEcran> {
     }
   }
 
-  List<Pharmacie> _pharmacies = [];
+  final List<Pharmacie> _pharmacies = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Liste des pharmacies'),
+        title: const Text('Liste des pharmacies'),
       ),
       body: FutureBuilder<List<Pharmacie>>(
         future: chargerPharmacies(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
@@ -41,7 +77,7 @@ class _PharmaciesEcranState extends State<PharmaciesEcran> {
               child: Text('Erreur: ${snapshot.error}'),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
+            return const Center(
               child: Text('Aucune pharmacie disponible.'),
             );
           } else {
@@ -51,11 +87,15 @@ class _PharmaciesEcranState extends State<PharmaciesEcran> {
               itemBuilder: (context, index) {
                 final pharmacie = pharmacies[index];
                 return ListTile(
-                  //Compléter l'affichage
-                  // Un bouton pour la suppression
-                  onTap: () {
-                    //Affichage de la page de détails
-                  },
+                  title: Text('${pharmacie.nom}'),
+                  subtitle: Text('${pharmacie.quartier}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      // Ajouter la logique pour la suppression
+                      _supprimerPharmacie('${pharmacie.id}');
+                    },
+                  ),
                 );
               },
             );
@@ -63,10 +103,12 @@ class _PharmaciesEcranState extends State<PharmaciesEcran> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: //Ajout d'une pharmacie
-            () {},
+        onPressed: () {
+          // Ajout d'une pharmacie
+          _ajouterPharmacie();
+        },
         tooltip: 'Ajouter une pharmacie',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
